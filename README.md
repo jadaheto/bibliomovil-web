@@ -33,6 +33,7 @@ npm start            # http://localhost:4200 (usa src/environments/environment.d
 |---|---|
 | `src/environments/environment.development.ts` | `ng serve` / `ng build --configuration development`: `apiUrl: http://localhost:3000/api` |
 | `src/environments/environment.ts` | Producción. `apiUrl` contiene el marcador `__API_URL__`, que el `Dockerfile` sustituye con el argumento de build `API_URL` |
+| `.env.example` | Plantilla con `API_URL` (URL pública de la API) para el build de producción / Docker. Copiar a `.env` y ajustar |
 
 Build de producción manual: `sed -i "s#__API_URL__#https://api.tudominio.com/api#" src/environments/environment.ts && npm run build`.
 Docker: `docker build --build-arg API_URL=https://api.tudominio.com/api -t bibliomovil-web .` (nginx sirve la SPA con
