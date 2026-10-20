@@ -1,0 +1,106 @@
+<app-page-title [titulo]="'Actividad #' + id()" documento="Detalle de Actividad">
+  @if (puedeRegistrarEjecucion()) {
+    <a [routerLink]="['/profesional/actividades', id(), 'ejecucion']" class="btn btn-primary btn-sm"><i class="ri-edit-box-line me-1"></i>Registrar Ejecución</a>
+  }
+  <a [routerLink]="rutaVolver()" class="btn btn-secondary btn-sm"><i class="ri-arrow-left-line me-1"></i>Volver al listado</a>
+</app-page-title>
+
+@if (!actividad()) {
+  <app-loading />
+} @else if (actividad(); as a) {
+  @if (a.estadoEvaluacion === 'Cancelada') {
+    <div class="card border-danger">
+      <div class="card-header bg-danger"><h5 class="card-title text-white"><i class="ri-close-circle-line me-1"></i>Actividad cancelada</h5></div>
+      <div class="card-body">
+        <p class="mb-1"><strong>Motivo de cancelación:</strong> {{ a.motivoCancelacion || 'Sin motivo registrado' }}</p>
+        <p class="mb-2"><strong>Fecha de cancelación:</strong> {{ a.fechaCancelacion ? (a.fechaCancelacion | date: 'dd/MM/yyyy HH:mm') : '-' }}</p>
+        <div class="alert alert-warning mb-0 py-2">Esta actividad fue cancelada y no requiere registro de ejecución.</div>
+      </div>
+    </div>
+  }
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header bg-primary"><h5 class="card-title">Información General</h5></div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-5">Estado</dt><dd class="col-sm-7"><span [class]="badge(a.estadoEvaluacion)">{{ etiqueta(a.estadoEvaluacion) }}</span></dd>
+            <dt class="col-sm-5">Fecha</dt><dd class="col-sm-7">{{ a.fechaActividad | date: 'dd/MM/yyyy' }}</dd>
+            <dt class="col-sm-5">Hora inicio</dt><dd class="col-sm-7">{{ a.horaInicio | hora }}</dd>
+            <dt class="col-sm-5">Hora finalización</dt><dd class="col-sm-7">{{ a.horaFinalizacion | hora }}</dd>
+            <dt class="col-sm-5">Profesionales</dt>
+            <dd class="col-sm-7">
+              @if (a.profesionales.length) {
+                <ul class="mb-0 ps-3">
+                  @for (p of a.profesionales; track p.profesionalId) { <li>{{ p.nombreCompleto }} ({{ p.cargo }})</li> }
+                </ul>
+              } @else { No hay profesionales asignados }
+            </dd>
+            <dt class="col-sm-5">Municipio</dt><dd class="col-sm-7">{{ a.municipio }}</dd>
+            <dt class="col-sm-5">Institución</dt><dd class="col-sm-7">{{ a.institucionVisible || a.tipoInstitucion || 'Sin institución registrada' }}</dd>
+            <dt class="col-sm-5">Tipo de institución</dt><dd class="col-sm-7">{{ a.tipoInstitucion }}</dd>
+            <dt class="col-sm-5">Eje Mensual</dt><dd class="col-sm-7">{{ a.ejeMensual }}</dd>
+            <dt class="col-sm-5">Estrategia</dt><dd class="col-sm-7">{{ a.estrategiaInstitucional }}</dd>
+            <dt class="col-sm-5">Título de la actividad</dt><dd class="col-sm-7" style="white-space: pre-line">{{ a.descripcionActividad }}</dd>
+            <dt class="col-sm-5">Objetivo</dt><dd class="col-sm-7" style="white-space: pre-line">{{ a.objetivoEspecifico }}</dd>
+            <dt class="col-sm-5">Participantes</dt><dd class="col-sm-7">{{ a.numTotalParticipantes }}</dd>
+            <dt class="col-sm-5">Población Atendida</dt><dd class="col-sm-7">{{ a.poblacionAtendida || 'No especificada' }}</dd>
+            <dt class="col-sm-5">Atención a discapacidad</dt><dd class="col-sm-7">{{ a.personaDiscapacidadSino ? 'Sí - ' + (a.tipoDiscapacidad || 'No especificado') : 'No' }}</dd>
+            @if (a.solicitud; as s) {
+              <dt class="col-sm-5">Solicitud vinculada</dt><dd class="col-sm-7"><a [routerLink]="['/solicitudes', s.id]">#{{ s.id }}</a> — {{ s.institucionNombre || s.nombreInstitucion }}</dd>
+              <dt class="col-sm-5">Responsable (solicitud)</dt><dd class="col-sm-7">{{ s.responsableEvento || '-' }} {{ s.telefonoResponsable ? '· ' + s.telefonoResponsable : '' }}</dd>
+            }
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header bg-success"><h5 class="card-title">Resultados de Profesionales</h5></div>
+        <div class="card-body">
+          @for (asig of a.asignaciones; track asig.id) {
+            <div class="border rounded p-3 mb-3">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <h6 class="mb-0 fw-bold">{{ asig.profesionalNombre }} ({{ asig.profesionalCargo }})</h6>
+                <span class="badge" [class.bg-success]="asig.estado === 'Completado'" [class.bg-warning]="asig.estado !== 'Completado'">{{ asig.estado }}</span>
+              </div>
+              @if (asig.estado === 'Completado') {
+                <p class="mb-1"><strong>Resultados Principales:</strong><br /><span style="white-space: pre-line">{{ asig.resultados || 'No registrado' }}</span></p>
+                <p class="mb-1"><strong>Impacto Percibido:</strong><br /><span style="white-space: pre-line">{{ asig.impactoPercibido || 'No registrado' }}</span></p>
+                <p class="mb-1"><strong>Dificultades:</strong><br /><span style="white-space: pre-line">{{ asig.dificultades || 'No registrado' }}</span></p>
+                <p class="mb-1"><strong>Propuestas de Mejora:</strong><br /><span style="white-space: pre-line">{{ asig.propuestasMejora || 'No registrado' }}</span></p>
+                @if (asig.personaDiscapacidadSino !== null) {
+                  <p class="mb-1"><strong>Atención a discapacidad:</strong> {{ asig.personaDiscapacidadSino ? 'Sí - ' + (asig.tipoDiscapacidad || 'No especificado') : 'No' }}</p>
+                }
+                <p class="mb-1"><strong>Evidencias Adjuntas:</strong></p>
+                @if (asig.evidencias.length) {
+                  <div class="d-flex flex-wrap gap-2 mb-2">
+                    @for (url of asig.evidencias; track url) {
+                      @if (esImagen(url)) {
+                        <a [href]="url" target="_blank" rel="noopener" title="Clic para ampliar">
+                          <img [src]="url" alt="Evidencia" class="rounded border" style="width: 96px; height: 96px; object-fit: cover" />
+                        </a>
+                      } @else {
+                        <a [href]="url" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm"><i class="ri-download-line me-1"></i>Descargar {{ extension(url) }}</a>
+                      }
+                    }
+                  </div>
+                } @else {
+                  <p class="text-muted mb-2">Sin evidencias</p>
+                }
+                <p class="mb-0"><strong>Observaciones:</strong> {{ asig.observaciones || 'Sin observaciones' }}</p>
+                <small class="text-muted">Registrado el {{ asig.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+              } @else {
+                <p class="text-muted mb-0">Este profesional aún no ha registrado sus resultados.</p>
+              }
+            </div>
+          } @empty {
+            <p class="text-muted mb-0">No hay profesionales asignados a esta actividad.</p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

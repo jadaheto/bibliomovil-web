@@ -1,0 +1,131 @@
+<app-page-title titulo="Nueva Solicitud de Servicio" documento="Nueva Solicitud">
+  <a routerLink="/solicitudes" class="btn btn-secondary btn-sm"><i class="ri-arrow-left-line me-1"></i>Volver al listado</a>
+</app-page-title>
+
+<div class="row">
+  <div class="col-lg-10">
+    <div class="card">
+      <div class="card-header bg-primary"><h5 class="card-title">Formulario de Solicitud</h5></div>
+      <div class="card-body">
+        @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+        <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="poli" formControlName="poliProteccionDatos" />
+                <label class="form-check-label" for="poli">Acepto la política de tratamiento y protección de datos personales *</label>
+              </div>
+              @if (form.controls.poliProteccionDatos.invalid && form.controls.poliProteccionDatos.touched) {
+                <div class="invalid-feedback d-block">Debe aceptar la política de tratamiento y protección de datos.</div>
+              }
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Nombre de la Institución/Organización *</label>
+              <input class="form-control" formControlName="nombreInstitucion" />
+              @if (institucionBloqueada()) { <div class="form-text">Se toma de la institución vinculada a su cuenta.</div> }
+              <app-field-error [control]="form.controls.nombreInstitucion" etiqueta="El nombre de la institución" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nombre del Representante *</label>
+              <input class="form-control" formControlName="nombreRepresentante" />
+              <app-field-error [control]="form.controls.nombreRepresentante" etiqueta="El nombre del representante" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Correo electrónico *</label>
+              <input type="email" class="form-control" formControlName="correo" />
+              <app-field-error [control]="form.controls.correo" etiqueta="El correo" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Teléfono de contacto *</label>
+              <input type="tel" class="form-control" formControlName="telefono" />
+              <app-field-error [control]="form.controls.telefono" etiqueta="El teléfono" />
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Objetivo del evento o actividad *</label>
+              <textarea class="form-control" rows="3" formControlName="objetivoEvento"></textarea>
+              <app-field-error [control]="form.controls.objetivoEvento" etiqueta="El objetivo" />
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Número de participantes</label>
+              <input type="number" min="1" class="form-control" formControlName="numParticipantes" />
+              <app-field-error [control]="form.controls.numParticipantes" etiqueta="El número de participantes" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Municipio *</label>
+              <select class="form-select" formControlName="municipio">
+                <option value="">Seleccionar municipio...</option>
+                @for (m of municipios; track m) { <option [value]="m">{{ m }}</option> }
+              </select>
+              <app-field-error [control]="form.controls.municipio" etiqueta="El municipio" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">¿Atención a personas con discapacidad? *</label>
+              <select class="form-select" formControlName="atencionDiscapacidad">
+                <option value="No">No</option>
+                <option value="Si">Sí</option>
+              </select>
+            </div>
+            @if (atiendeDiscapacidad) {
+              <div class="col-md-6">
+                <label class="form-label">Tipo de discapacidad</label>
+                <input class="form-control" formControlName="tipoDiscapacidad" placeholder="Ej: Visual, Auditiva, Motriz, etc." />
+              </div>
+            }
+
+            <div class="col-12">
+              <label class="form-label">Clasificación de la población (por edades y etapas)</label>
+              <textarea class="form-control" rows="2" formControlName="clasificacionPoblacion" placeholder="Ej: Niños 5-10 años: 20, Jóvenes 15-18 años: 12"></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Ubicación del evento *</label>
+              <input class="form-control" formControlName="ubicacionEvento" />
+              <app-field-error [control]="form.controls.ubicacionEvento" etiqueta="La ubicación" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Descripción del espacio físico</label>
+              <input class="form-control" formControlName="descEspacioFisico" placeholder="Cancha techada, aula, parque, etc." />
+              <div class="form-text">
+                <a [href]="urlCondiciones" target="_blank" rel="noopener"><i class="ri-external-link-line me-1"></i>Ver condiciones necesarias para el espacio físico</a>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Responsable del evento *</label>
+              <input class="form-control" formControlName="responsableEvento" />
+              <app-field-error [control]="form.controls.responsableEvento" etiqueta="El responsable" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Cargo del responsable</label>
+              <input class="form-control" formControlName="cargoResponsable" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Número de contacto del responsable</label>
+              <input type="tel" class="form-control" formControlName="telefonoResponsable" placeholder="Ej. 3001234567" />
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Otras entidades e instancias vinculadas</label>
+              <textarea class="form-control" rows="2" formControlName="entidadesVinculadas" placeholder="Ej: Comité de padres, Alcaldía, Secretaría de Educación"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Observaciones</label>
+              <textarea class="form-control" rows="3" formControlName="observaciones" placeholder="Información adicional que considere importante (opcional)"></textarea>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary" [disabled]="guardando()">
+              @if (guardando()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+              <i class="ri-send-plane-line me-1"></i>Enviar Solicitud
+            </button>
+            <a routerLink="/solicitudes" class="btn btn-light">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

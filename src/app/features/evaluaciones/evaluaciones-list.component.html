@@ -1,0 +1,96 @@
+<app-page-title titulo="Evaluación de Impacto y Satisfacción" documento="Evaluaciones">
+  @if (auth.hasRole('administrador')) {
+    <a routerLink="/evaluaciones/nueva" class="btn btn-outline-primary btn-sm"><i class="ri-add-line me-1"></i>Nueva Evaluación</a>
+    <button type="button" class="btn btn-danger btn-sm" (click)="abrirDescarga()"><i class="ri-file-pdf-line me-1"></i>Descargar</button>
+  }
+</app-page-title>
+
+<div class="card">
+  <div class="card-header"><h5 class="card-title">Evaluaciones Registradas</h5></div>
+  <div class="card-body">
+    @if (cargando()) {
+      <app-loading />
+    } @else {
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Actividad</th><th>Institución</th><th>Evaluaciones</th><th>Calificación Prom.</th><th>Fecha Actividad</th><th>Acciones</th></tr>
+          </thead>
+          <tbody>
+            @for (e of items(); track e.actividadId) {
+              <tr>
+                <td class="fw-semibold">{{ e.descripcionActividad || 'Sin nombre' }}</td>
+                <td>{{ e.nombreInstitucion || 'N/A' }}</td>
+                <td><span class="badge bg-light-purple text-primary">{{ e.totalEvaluaciones }}</span></td>
+                <td><i class="ri-star-fill text-warning me-1"></i>{{ promedio(e.promedioGeneral) }}/5</td>
+                <td>{{ e.fechaActividad ? (e.fechaActividad | date: 'dd/MM/yyyy') : 'N/A' }}</td>
+                <td><a [routerLink]="['/evaluaciones/actividad', e.actividadId]" class="btn btn-outline-primary btn-sm"><i class="ri-eye-line"></i> Ver Detalle</a></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="text-center text-muted py-4">No hay evaluaciones registradas.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<app-modal [abierto]="modalDescarga()" titulo="Descargar resumen de evaluaciones" (cerrar)="modalDescarga.set(false)">
+  <form id="formResumen" (submit)="descargar($event)">
+    <label class="form-label d-block">Tipo de reporte *</label>
+    <div class="form-check form-check-inline">
+      <input type="radio" class="form-check-input" id="tipoMensual" name="tipo" value="mensual" [(ngModel)]="tipo" />
+      <label class="form-check-label" for="tipoMensual">Mensual</label>
+    </div>
+    <div class="form-check form-check-inline mb-3">
+      <input type="radio" class="form-check-input" id="tipoTrimestral" name="tipo" value="trimestral" [(ngModel)]="tipo" />
+      <label class="form-check-label" for="tipoTrimestral">Trimestral (3 meses consecutivos)</label>
+    </div>
+
+    @if (tipo === 'mensual') {
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Mes *</label>
+          <select class="form-select" [(ngModel)]="mesInicio" name="mesInicio">
+            @for (m of meses; track m; let i = $index) { <option [ngValue]="i + 1">{{ m }}</option> }
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Año *</label>
+          <select class="form-select" [(ngModel)]="anio" name="anioMensual">
+            @for (a of anios; track a) { <option [ngValue]="a">{{ a }}</option> }
+          </select>
+        </div>
+      </div>
+      <div class="form-text">Se incluyen las evaluaciones de las actividades realizadas en el mes seleccionado.</div>
+    } @else {
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Mes inicio *</label>
+          <select class="form-select" [(ngModel)]="mesInicio" name="mesInicioTri">
+            @for (m of meses; track m; let i = $index) { <option [ngValue]="i + 1">{{ m }}</option> }
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Mes fin *</label>
+          <select class="form-select" [(ngModel)]="mesFin" name="mesFinTri">
+            @for (m of meses; track m; let i = $index) { <option [ngValue]="i + 1">{{ m }}</option> }
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Año *</label>
+          <select class="form-select" [(ngModel)]="anio" name="anioTrimestral">
+            @for (a of anios; track a) { <option [ngValue]="a">{{ a }}</option> }
+          </select>
+        </div>
+      </div>
+      <div class="form-text">Ejemplo: para Mayo – Julio, seleccione Mayo como mes inicio y Julio como mes fin.</div>
+    }
+    @if (errorPeriodo()) { <div class="alert alert-danger mt-3 mb-0 py-2">{{ errorPeriodo() }}</div> }
+  </form>
+  <div modal-footer class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="modalDescarga.set(false)">Cancelar</button>
+    <button type="submit" form="formResumen" class="btn btn-danger"><i class="ri-file-pdf-line me-1"></i>Descargar PDF</button>
+  </div>
+</app-modal>

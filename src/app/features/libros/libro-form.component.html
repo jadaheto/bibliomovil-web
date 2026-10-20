@@ -1,0 +1,179 @@
+<app-page-title [titulo]="esEdicion() ? 'Editar Libro' : 'Nuevo Libro'">
+  <a routerLink="/libros" class="btn btn-secondary btn-sm"><i class="ri-arrow-left-line me-1"></i>Volver</a>
+</app-page-title>
+
+@if (cargando()) {
+  <app-loading />
+} @else {
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card h-100">
+          <div class="card-header"><h5 class="card-title">Información del Libro</h5></div>
+          <div class="card-body">
+            @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label class="form-label">Titulo *</label>
+                <input class="form-control" formControlName="titulo" />
+                <app-field-error [control]="form.controls.titulo" etiqueta="El título" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">ISBN *</label>
+                <input class="form-control" formControlName="isbn" />
+                <app-field-error [control]="form.controls.isbn" etiqueta="El ISBN" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Autor *</label>
+                <input class="form-control" formControlName="autor" />
+                <app-field-error [control]="form.controls.autor" etiqueta="El autor" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Editorial</label>
+                <input class="form-control" formControlName="editorial" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Año Publicación</label>
+                <input type="number" class="form-control" formControlName="anioPublicacion" min="1900" max="2099" />
+                <app-field-error [control]="form.controls.anioPublicacion" etiqueta="El año" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Categoría *</label>
+                <select class="form-select" formControlName="categoria">
+                  <option value="">Seleccionar...</option>
+                  @for (c of categorias; track c) { <option [value]="c">{{ c }}</option> }
+                </select>
+                <app-field-error [control]="form.controls.categoria" etiqueta="La categoría" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Idioma *</label>
+                <select class="form-select" formControlName="idioma">
+                  <option value="">Seleccionar...</option>
+                  @for (i of idiomas; track i.value) { <option [value]="i.value">{{ i.label }}</option> }
+                </select>
+                <app-field-error [control]="form.controls.idioma" etiqueta="El idioma" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Numero de Paginas</label>
+                <input type="number" class="form-control" formControlName="numeroPaginas" min="1" />
+                <app-field-error [control]="form.controls.numeroPaginas" etiqueta="El número de páginas" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Estado de Conservacion *</label>
+                <select class="form-select" formControlName="estadoConservacion">
+                  <option value="">Seleccionar...</option>
+                  @for (e of estadosConservacion; track e.value) { <option [value]="e.value">{{ e.label }}</option> }
+                </select>
+                <app-field-error [control]="form.controls.estadoConservacion" etiqueta="El estado de conservación" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Disponible</label>
+                <select class="form-select" formControlName="disponible">
+                  <option value="1">Si</option>
+                  <option value="0">No</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Ubicacion Estante</label>
+                <input class="form-control" formControlName="ubicacionEstante" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Código interno</label>
+                <input class="form-control" formControlName="codigoBarras" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Cantidad *</label>
+                <input type="number" class="form-control" formControlName="cantidad" min="0" />
+                <app-field-error [control]="form.controls.cantidad" etiqueta="La cantidad" />
+              </div>
+              <div class="col-md-8">
+                <label class="form-label">Observaciones</label>
+                <textarea class="form-control" rows="3" formControlName="observaciones"></textarea>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Activo</label>
+                <select class="form-select" formControlName="activo">
+                  <option value="1">Si</option>
+                  <option value="0">No</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Imágenes del Libro</h5>
+            <span class="badge bg-light-purple text-primary">{{ totalImagenes() }}</span>
+          </div>
+          <div class="card-body">
+            <h6 class="text-uppercase text-muted fw-bold fs-12 mb-2">Portada principal</h6>
+            @if (portadaMostrada(); as src) {
+              <div class="position-relative mb-2">
+                <img [src]="src" alt="Portada" class="portada-preview" />
+                <span class="badge bg-primary position-absolute top-0 start-0 m-2">Principal</span>
+              </div>
+            } @else {
+              <div class="portada-vacia mb-2"><span><i class="ri-image-line me-1"></i>Sin portada</span></div>
+            }
+            <input #portadaInput type="file" [accept]="aceptados" hidden (change)="seleccionarPortada($event)" />
+            <div class="d-flex gap-2 flex-wrap">
+              <button type="button" class="btn btn-outline-primary btn-sm" (click)="portadaInput.click()">
+                <i class="ri-upload-2-line me-1"></i>{{ portadaMostrada() ? 'Cambiar principal' : 'Subir imagen principal' }}
+              </button>
+              @if (portadaArchivo()) {
+                <button type="button" class="btn btn-outline-secondary btn-sm" (click)="quitarPortadaNueva(portadaInput)">
+                  <i class="ri-close-line me-1"></i>Descartar cambio
+                </button>
+              }
+            </div>
+            <div class="form-text">JPG, PNG o WEBP (máx. 5MB). Se envía al guardar el libro.</div>
+
+            <hr />
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="text-uppercase text-muted fw-bold fs-12 mb-0">Imágenes adicionales</h6>
+              <input #galeriaInput type="file" [accept]="aceptados" multiple hidden (change)="subirImagenes($event)" />
+              <button type="button" class="btn btn-outline-success btn-sm" (click)="galeriaInput.click()" [disabled]="subiendo()">
+                @if (subiendo()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                <i class="ri-add-line me-1"></i>Agregar más imágenes
+              </button>
+            </div>
+            @if (!esEdicion()) {
+              <p class="text-muted fs-12 mb-0">Primero guarda el libro para poder agregar imágenes adicionales.</p>
+            } @else if (imagenes().length === 0) {
+              <p class="text-muted fs-12 mb-0">No hay imágenes adicionales.</p>
+            } @else {
+              <div class="row g-2">
+                @for (img of imagenes(); track img.id) {
+                  <div class="col-6">
+                    <div class="galeria-item">
+                      <img [src]="img.url" alt="Imagen del libro" />
+                      <div class="galeria-acciones">
+                        <button type="button" class="btn btn-light btn-sm" title="Marcar como principal" (click)="marcarPrincipal(img)">
+                          <i class="ri-star-line"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" title="Eliminar" (click)="eliminarImagen(img)">
+                          <i class="ri-delete-bin-line"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-primary" [disabled]="guardando()">
+        @if (guardando()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+        <i class="ri-save-line me-1"></i>{{ esEdicion() ? 'Guardar Cambios' : 'Guardar Libro' }}
+      </button>
+      <a routerLink="/libros" class="btn btn-light">Cancelar</a>
+    </div>
+  </form>
+}

@@ -1,0 +1,103 @@
+<app-page-title titulo="Mis Actividades" documento="Mis Actividades - Profesional">
+  <a routerLink="/profesional/dashboard" class="btn btn-secondary btn-sm"><i class="ri-dashboard-line me-1"></i>Dashboard</a>
+  <a routerLink="/actividades/nueva" class="btn btn-primary btn-sm"><i class="ri-add-line me-1"></i>Nueva Actividad</a>
+</app-page-title>
+
+<div class="card">
+  <div class="card-header"><h5 class="card-title">Listado de Actividades</h5></div>
+  <div class="card-body">
+    @if (cargando()) {
+      <app-loading />
+    } @else {
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Fecha</th><th>Hora inicio</th><th>Hora finalización</th><th>Institución</th><th>Municipio</th><th>Estado</th><th>Acciones</th></tr>
+          </thead>
+          <tbody>
+            @for (a of items(); track a.id) {
+              <tr>
+                <td>{{ a.fechaActividad | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ a.horaInicio | hora }}</td>
+                <td>{{ a.horaFinalizacion | hora }}</td>
+                <td><div class="fw-semibold">{{ a.institucionVisible || a.tipoInstitucion }}</div><small class="text-muted">{{ a.descripcionActividad }}</small></td>
+                <td>{{ a.municipio }}</td>
+                <td><span [class]="badge(a.estadoEvaluacion)">{{ etiqueta(a.estadoEvaluacion) }}</span></td>
+                <td>
+                  <div class="d-flex gap-1 flex-wrap">
+                    <a [routerLink]="['/actividades', a.id]" class="btn btn-outline-primary btn-sm"><i class="ri-eye-line"></i> Ver Detalle</a>
+                    @if (a.estadoEvaluacion === 'Pendiente') {
+                      @if (puedeRegistrar(a)) {
+                        <a [routerLink]="['/profesional/actividades', a.id, 'ejecucion']" class="btn btn-primary btn-sm"><i class="ri-edit-box-line"></i> Registrar Ejecución</a>
+                      }
+                      <button type="button" class="btn btn-outline-info btn-sm" (click)="abrirQr(a)"><i class="ri-qr-code-line"></i> QR Evaluación</button>
+                      <button type="button" class="btn btn-info btn-sm" (click)="abrirReprogramar(a)"><i class="ri-calendar-event-line"></i> Reprogramar</button>
+                      <button type="button" class="btn btn-danger btn-sm" (click)="abrirCancelar(a)"><i class="ri-close-circle-line"></i> Cancelar</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="text-center text-muted py-4">No hay actividades registradas</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pagination [meta]="meta()" (cambiar)="cargar($event)" />
+    }
+  </div>
+</div>
+
+<app-modal [abierto]="!!qrActividad()" titulo="QR para Evaluación" (cerrar)="qrActividad.set(null)">
+  <div class="text-center">
+    @if (qrDataUrl(); as qr) {
+      <img [src]="qr" alt="Código QR de evaluación" width="250" height="250" class="border rounded p-2" />
+    } @else {
+      <div class="spinner-border text-primary my-4" role="status"><span class="visually-hidden">Generando...</span></div>
+    }
+    <p class="mt-3 mb-1">Escanea este QR para acceder al formulario de evaluación</p>
+    <a [href]="qrUrl()" target="_blank" rel="noopener" class="text-break small">{{ qrUrl() }}</a>
+    @if (qrActividad(); as a) { <div class="text-muted small mt-2">{{ a.descripcionActividad }} · {{ a.fechaActividad | date: 'dd/MM/yyyy' }}</div> }
+  </div>
+  <div modal-footer class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="qrActividad.set(null)">Cerrar</button>
+  </div>
+</app-modal>
+
+<app-modal [abierto]="!!reprogramar()" titulo="Reprogramar actividad" (cerrar)="reprogramar.set(null)">
+  <form id="formReprogramar" (submit)="confirmarReprogramar($event)">
+    <div class="alert alert-info py-2">Solo se actualizará la fecha y los horarios de la misma actividad; no se creará un registro nuevo.</div>
+    <div class="mb-3">
+      <label class="form-label">Nueva fecha de la actividad *</label>
+      <input type="date" class="form-control" [(ngModel)]="fechaActividad" name="fechaActividad" [class.is-invalid]="formTocado && !fechaActividad" />
+      @if (formTocado && !fechaActividad) { <div class="invalid-feedback d-block">Debe indicar la nueva fecha de la actividad.</div> }
+    </div>
+    <div class="row g-3">
+      <div class="col-6">
+        <label class="form-label">Hora inicio</label>
+        <input type="time" class="form-control" [(ngModel)]="horaInicio" name="horaInicio" />
+      </div>
+      <div class="col-6">
+        <label class="form-label">Hora finalización</label>
+        <input type="time" class="form-control" [(ngModel)]="horaFinalizacion" name="horaFinalizacion" />
+      </div>
+    </div>
+  </form>
+  <div modal-footer class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="reprogramar.set(null)">Cerrar</button>
+    <button type="submit" form="formReprogramar" class="btn btn-info" [disabled]="procesando()">Reprogramar</button>
+  </div>
+</app-modal>
+
+<app-modal [abierto]="!!cancelar()" titulo="Cancelar actividad" (cerrar)="cancelar.set(null)">
+  <form id="formCancelar" (submit)="confirmarCancelar($event)">
+    <div class="alert alert-warning py-2">Al cancelar, la actividad no podrá ser ejecutada. Indique el motivo por el cual no se realizará.</div>
+    <label class="form-label">Motivo de la cancelación *</label>
+    <textarea class="form-control" rows="4" [(ngModel)]="motivoCancelacion" name="motivoCancelacion" placeholder="Describa el motivo por el cual se cancela esta actividad..." [class.is-invalid]="formTocado && !motivoCancelacion.trim()"></textarea>
+    @if (formTocado && !motivoCancelacion.trim()) { <div class="invalid-feedback d-block">Debe indicar el motivo de la cancelación.</div> }
+  </form>
+  <div modal-footer class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="cancelar.set(null)">Cerrar</button>
+    <button type="submit" form="formCancelar" class="btn btn-danger" [disabled]="procesando()">Cancelar actividad</button>
+  </div>
+</app-modal>

@@ -1,0 +1,107 @@
+<app-page-title titulo="Registrar Ejecución de Actividad">
+  <a routerLink="/profesional/actividades" class="btn btn-secondary btn-sm"><i class="ri-arrow-left-line me-1"></i>Mis Actividades</a>
+</app-page-title>
+
+@if (cargando()) {
+  <app-loading />
+} @else if (actividad(); as a) {
+  @if (cancelada) {
+    <div class="alert alert-danger">
+      La actividad fue cancelada y no requiere registro de ejecución.
+      <a routerLink="/profesional/actividades" class="alert-link ms-1">Volver a Mis Actividades</a>
+    </div>
+  } @else if (yaCompletada) {
+    <div class="alert alert-info">
+      Ya registró la ejecución de esta actividad.
+      <a [routerLink]="['/actividades', a.id]" class="alert-link ms-1">Ver detalle</a>
+    </div>
+  } @else {
+    <div class="row">
+      <div class="col-lg-9">
+        <div class="card">
+          <div class="card-header bg-primary"><h5 class="card-title">Datos de la Ejecución</h5></div>
+          <div class="card-body">
+            @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+            <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+              <div class="row g-3">
+                <div class="col-md-8">
+                  <label class="form-label">Título de la Actividad</label>
+                  <input class="form-control" [value]="a.descripcionActividad" disabled />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Fecha de Actividad</label>
+                  <input class="form-control" [value]="a.fechaActividad | date: 'dd/MM/yyyy'" disabled />
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Resultados Principales *</label>
+                  <textarea class="form-control" rows="4" formControlName="resultados"></textarea>
+                  <app-field-error [control]="form.controls.resultados" etiqueta="Los resultados principales" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Impacto Percibido *</label>
+                  <textarea class="form-control" rows="3" formControlName="impactoPercibido"></textarea>
+                  <app-field-error [control]="form.controls.impactoPercibido" etiqueta="El impacto percibido" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Dificultades Encontradas *</label>
+                  <textarea class="form-control" rows="3" formControlName="dificultades"></textarea>
+                  <app-field-error [control]="form.controls.dificultades" etiqueta="Las dificultades" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Propuestas de Mejora *</label>
+                  <textarea class="form-control" rows="3" formControlName="propuestasMejora"></textarea>
+                  <app-field-error [control]="form.controls.propuestasMejora" etiqueta="Las propuestas de mejora" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Observaciones</label>
+                  <textarea class="form-control" rows="2" formControlName="observaciones" placeholder="Opcional"></textarea>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">¿Atención a personas con discapacidad? *</label>
+                  <select class="form-select" formControlName="personaDiscapacidadSino">
+                    <option value="">Seleccionar...</option>
+                    <option value="0">No</option>
+                    <option value="1">Sí</option>
+                  </select>
+                  <app-field-error [control]="form.controls.personaDiscapacidadSino" etiqueta="Este campo" />
+                </div>
+                @if (atiendeDiscapacidad) {
+                  <div class="col-md-8">
+                    <label class="form-label">Tipo de discapacidad</label>
+                    <input class="form-control" formControlName="tipoDiscapacidad" placeholder="Ej: Auditiva, Motriz, Visual, etc." />
+                  </div>
+                }
+
+                <div class="col-12">
+                  <label class="form-label">Subir Evidencias (Fotos y Documentos) *</label>
+                  <input type="file" class="form-control" multiple accept="image/*,.pdf,.doc,.docx" (change)="seleccionarArchivos($event)" [class.is-invalid]="archivosTocados() && errorArchivos()" />
+                  <div class="form-text">Puedes subir imágenes, PDFs o documentos Word. Máximo 10 archivos de 10 MB cada uno.</div>
+                  @if (archivosTocados() && errorArchivos()) { <div class="invalid-feedback d-block">{{ errorArchivos() }}</div> }
+                  @if (archivos().length) {
+                    <ul class="list-group mt-2">
+                      @for (f of archivos(); track f.name + f.size; let i = $index) {
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-1">
+                          <span><i class="ri-attachment-2 me-1"></i>{{ f.name }} <small class="text-muted">({{ tamano(f.size) }})</small></span>
+                          <button type="button" class="btn btn-link btn-sm text-danger p-0" (click)="quitarArchivo(i)" aria-label="Quitar"><i class="ri-close-line"></i></button>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <button type="submit" class="btn btn-primary" [disabled]="guardando()">
+                  @if (guardando()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                  <i class="ri-save-line me-1"></i>Guardar Ejecución
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+}

@@ -1,0 +1,128 @@
+<app-page-title titulo="Registrar Nueva Actividad" documento="Nueva Actividad">
+  @if (auth.hasRole('administrador')) {
+    <a routerLink="/actividades/registradas" class="btn btn-secondary btn-sm"><i class="ri-arrow-left-line me-1"></i>Volver al listado</a>
+  } @else if (auth.hasRole('profesional')) {
+    <a routerLink="/profesional/actividades" class="btn btn-secondary btn-sm"><i class="ri-arrow-left-line me-1"></i>Mis Actividades</a>
+  }
+</app-page-title>
+
+<div class="row">
+  <div class="col-lg-10">
+    <div class="card">
+      <div class="card-header bg-primary"><h5 class="card-title">Información de la Actividad</h5></div>
+      <div class="card-body">
+        @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+        <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Solicitud vinculada (Colegio) *</label>
+              <select class="form-select" formControlName="solicitudId" (change)="alSeleccionarSolicitud(form.controls.solicitudId.value)">
+                <option value="">Seleccionar colegio...</option>
+                @for (s of solicitudesAprobadas(); track s.id) { <option [value]="s.id">{{ etiquetaSolicitud(s) }}</option> }
+              </select>
+              @if (!solicitudesAprobadas().length) { <div class="form-text">No hay solicitudes aprobadas disponibles.</div> }
+              <app-field-error [control]="form.controls.solicitudId" etiqueta="La solicitud vinculada" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fecha de la actividad *</label>
+              <input type="date" class="form-control" formControlName="fechaActividad" />
+              <app-field-error [control]="form.controls.fechaActividad" etiqueta="La fecha" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Hora inicio *</label>
+              <input type="time" class="form-control" formControlName="horaInicio" />
+              <app-field-error [control]="form.controls.horaInicio" etiqueta="La hora de inicio" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Hora finalización *</label>
+              <input type="time" class="form-control" formControlName="horaFinalizacion" />
+              <app-field-error [control]="form.controls.horaFinalizacion" etiqueta="La hora de finalización" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Eje mensual del cronograma *</label>
+              <input class="form-control" formControlName="ejeMensual" placeholder="Ej: Marzo - Lectura" />
+              <app-field-error [control]="form.controls.ejeMensual" etiqueta="El eje mensual" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Profesionales * <small class="text-muted">(Seleccionar múltiples con Ctrl)</small></label>
+              <select class="form-select" multiple size="5" (change)="cambiarProfesionales($event)" [class.is-invalid]="form.controls.profesionalIds.invalid && form.controls.profesionalIds.touched">
+                @for (p of profesionales(); track p.id) {
+                  <option [value]="p.id" [selected]="estaSeleccionado(p.id)">{{ p.nombreCompleto }} - {{ p.cargo }}</option>
+                }
+              </select>
+              <div class="form-text">Los cargos se toman automáticamente del perfil de cada profesional.</div>
+              @if (form.controls.profesionalIds.invalid && form.controls.profesionalIds.touched) {
+                <div class="invalid-feedback d-block">Debe asignar al menos un profesional.</div>
+              }
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Municipio *</label>
+              <select class="form-select" formControlName="municipio">
+                <option value="">Seleccionar municipio...</option>
+                @for (m of municipios; track m) { <option [value]="m">{{ m }}</option> }
+              </select>
+              <app-field-error [control]="form.controls.municipio" etiqueta="El municipio" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Tipo de institución *</label>
+              <input class="form-control" formControlName="tipoInstitucion" placeholder="Colegio, Biblioteca, Centro Comunitario" />
+              <app-field-error [control]="form.controls.tipoInstitucion" etiqueta="El tipo de institución" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Estrategia institucional *</label>
+              <input class="form-control" formControlName="estrategiaInstitucional" />
+              <app-field-error [control]="form.controls.estrategiaInstitucional" etiqueta="La estrategia institucional" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Título de la actividad *</label>
+              <textarea class="form-control" rows="3" formControlName="descripcionActividad"></textarea>
+              <app-field-error [control]="form.controls.descripcionActividad" etiqueta="El título de la actividad" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Objetivo específico *</label>
+              <textarea class="form-control" rows="3" formControlName="objetivoEspecifico"></textarea>
+              <app-field-error [control]="form.controls.objetivoEspecifico" etiqueta="El objetivo específico" />
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Número total de participantes *</label>
+              <input type="number" min="1" class="form-control" formControlName="numTotalParticipantes" />
+              <app-field-error [control]="form.controls.numTotalParticipantes" etiqueta="El número de participantes" />
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Población atendida *</label>
+              <input class="form-control" formControlName="poblacionAtendida" placeholder="Ej: Ninos: 20, Jovenes: 15" />
+              <app-field-error [control]="form.controls.poblacionAtendida" etiqueta="La población atendida" />
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">¿Atención a personas con discapacidad? *</label>
+              <select class="form-select" formControlName="personaDiscapacidadSino">
+                <option value="">Seleccionar...</option>
+                <option value="0">No</option>
+                <option value="1">Sí</option>
+              </select>
+              <app-field-error [control]="form.controls.personaDiscapacidadSino" etiqueta="Este campo" />
+            </div>
+            @if (atiendeDiscapacidad) {
+              <div class="col-md-8">
+                <label class="form-label">Tipo de discapacidad</label>
+                <input class="form-control" formControlName="tipoDiscapacidad" placeholder="Auditiva, Motriz, Visual, etc." />
+              </div>
+            }
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary" [disabled]="guardando()">
+              @if (guardando()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+              <i class="ri-save-line me-1"></i>Guardar Actividad
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

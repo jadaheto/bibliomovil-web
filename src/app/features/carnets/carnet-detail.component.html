@@ -1,0 +1,68 @@
+<app-page-title titulo="Detalle del Carnet" class="no-print">
+  <a routerLink="/carnets/historial" class="btn btn-secondary btn-sm"><i class="ri-arrow-left-line me-1"></i>Volver al Historial</a>
+</app-page-title>
+
+@if (!carnet()) {
+  <app-loading />
+} @else if (carnet(); as c) {
+  <div class="card">
+    <div class="card-header bg-primary no-print"><h5 class="card-title">Información del Carnet</h5></div>
+    <div class="card-body">
+      <div class="row g-4">
+        <div class="col-lg-5 col-impresion">
+          <app-carnet-preview [carnet]="c" [qrDataUrl]="qrDataUrl()" />
+        </div>
+
+        <div class="col-lg-7 no-print">
+          <h6 class="seccion-titulo">Información Personal</h6>
+          <dl class="row mb-3">
+            <dt class="col-sm-4">Tipo</dt>
+            <dd class="col-sm-8"><span class="badge" [class]="c.tipoPersona === 'docente' ? 'bg-info' : 'bg-primary'">{{ tipo(c.tipoPersona) }}</span></dd>
+            <dt class="col-sm-4">Documento</dt><dd class="col-sm-8">{{ c.tipoIdentificacion }} - {{ c.numeroIdentificacion }} <small class="text-muted">({{ etiquetaTipoId(c.tipoIdentificacion) }})</small></dd>
+            <dt class="col-sm-4">Nombres</dt><dd class="col-sm-8">{{ c.nombres }}</dd>
+            <dt class="col-sm-4">Apellidos</dt><dd class="col-sm-8">{{ c.apellidos }}</dd>
+            <dt class="col-sm-4">Correo</dt><dd class="col-sm-8">{{ c.correo || 'No registrado' }}</dd>
+            <dt class="col-sm-4">Teléfono</dt><dd class="col-sm-8">{{ c.telefono || 'No registrado' }}</dd>
+            @if (c.institucionNombre) { <dt class="col-sm-4">Institución</dt><dd class="col-sm-8">{{ c.institucionNombre }}</dd> }
+          </dl>
+
+          <h6 class="seccion-titulo">Información Académica/Profesional</h6>
+          <dl class="row mb-3">
+            @if (c.tipoPersona === 'docente') {
+              <dt class="col-sm-4">Área</dt><dd class="col-sm-8">{{ c.area || 'No especificado' }}</dd>
+              <dt class="col-sm-4">Cargo</dt><dd class="col-sm-8">{{ c.cargo || 'No especificado' }}</dd>
+            } @else {
+              <dt class="col-sm-4">Grado</dt><dd class="col-sm-8">{{ c.grado || 'No especificado' }}</dd>
+              <dt class="col-sm-4">Edad</dt><dd class="col-sm-8">{{ c.edad ?? 'No especificado' }}</dd>
+              <dt class="col-sm-4">Jornada</dt><dd class="col-sm-8">{{ c.jornada || 'No especificado' }}</dd>
+              <dt class="col-sm-4">Acudiente</dt><dd class="col-sm-8">{{ c.acudiente || 'No registrado' }}</dd>
+              <dt class="col-sm-4">Tel. Acudiente</dt><dd class="col-sm-8">{{ c.telefonoAcudiente || 'No registrado' }}</dd>
+            }
+          </dl>
+
+          <h6 class="seccion-titulo">Estado del Carnet</h6>
+          <dl class="row mb-3">
+            <dt class="col-sm-4">Estado</dt>
+            <dd class="col-sm-8"><span class="badge" [class]="badge(c.estado).clase">{{ c.estado }}</span></dd>
+            <dt class="col-sm-4">Vigencia</dt><dd class="col-sm-8">{{ c.vigenciaDias || 365 }} días</dd>
+            <dt class="col-sm-4">Fecha de Solicitud</dt><dd class="col-sm-8">{{ c.fechaSolicitud | date: 'dd/MM/yyyy' }}</dd>
+            <dt class="col-sm-4">Fecha de Aprobación</dt><dd class="col-sm-8">{{ c.fechaAprobacion ? (c.fechaAprobacion | date: 'dd/MM/yyyy') : 'Pendiente' }}</dd>
+            <dt class="col-sm-4">Fecha de Vencimiento</dt><dd class="col-sm-8">{{ c.fechaVencimiento ? (c.fechaVencimiento | date: 'dd/MM/yyyy') : 'Pendiente' }}</dd>
+            @if (c.codigoCarnet) { <dt class="col-sm-4">Código del Carnet</dt><dd class="col-sm-8"><code>{{ c.codigoCarnet }}</code></dd> }
+            @if (c.observaciones) { <dt class="col-sm-4">Observaciones</dt><dd class="col-sm-8">{{ c.observaciones }}</dd> }
+          </dl>
+
+          <h6 class="seccion-titulo">Acciones</h6>
+          <div class="d-flex gap-2 flex-wrap">
+            <button type="button" class="btn btn-primary" (click)="imprimir()"><i class="ri-printer-line me-1"></i>Imprimir</button>
+            @if (qrDataUrl(); as qr) {
+              <a [href]="qr" [download]="nombreArchivoQr(c)" class="btn btn-outline-primary"><i class="ri-qr-code-line me-1"></i>Descargar QR</a>
+            } @else {
+              <button type="button" class="btn btn-outline-primary" disabled><i class="ri-qr-code-line me-1"></i>Descargar QR</button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,113 @@
+<app-page-title titulo="Calendario de Actividades">
+  @if (auth.hasRole('administrador')) {
+    <a routerLink="/actividades/registradas" class="btn btn-primary btn-sm"><i class="ri-list-check me-1"></i>Actividades</a>
+    <button type="button" class="btn btn-danger btn-sm" (click)="modalPdf.set(true)"><i class="ri-file-pdf-line me-1"></i>Descargar Calendario PDF</button>
+  }
+</app-page-title>
+
+<div class="card">
+  <div class="card-header"><h5 class="card-title">Programación Mensual</h5></div>
+  <div class="card-body">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <div class="btn-group">
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="mover(-1)" aria-label="Mes anterior"><i class="ri-arrow-left-s-line"></i></button>
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="mover(1)" aria-label="Mes siguiente"><i class="ri-arrow-right-s-line"></i></button>
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="hoy()">Hoy</button>
+      </div>
+      <h5 class="mb-0 fw-bold">{{ titulo() }}</h5>
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm" [class.btn-primary]="vista() === 'mes'" [class.btn-outline-primary]="vista() !== 'mes'" (click)="vista.set('mes')">Mes</button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="vista() === 'lista'" [class.btn-outline-primary]="vista() !== 'lista'" (click)="vista.set('lista')">Lista</button>
+      </div>
+    </div>
+
+    @if (cargando()) {
+      <app-loading />
+    } @else if (vista() === 'mes') {
+      <div class="cal-grid">
+        @for (d of diasSemana; track d) { <div class="cal-head">{{ d }}</div> }
+        @for (semana of semanas(); track $index) {
+          @for (dia of semana; track dia.fecha) {
+            <div class="cal-cell" [class.fuera]="!dia.delMes" [class.hoy]="dia.hoy">
+              <div class="cal-dia">{{ dia.dia }}</div>
+              @for (e of dia.eventos; track e.id) {
+                <button type="button" class="cal-evento" [style.background-color]="e.color" [title]="e.title + ' - ' + e.extendedProps.institucion" (click)="seleccionado.set(e)">
+                  {{ e.title }}
+                </button>
+              }
+            </div>
+          }
+        }
+      </div>
+      <div class="d-flex gap-3 flex-wrap mt-3 fs-12 text-muted">
+        <span><span class="badge" style="background-color: #f7b84b">&nbsp;</span> Programada</span>
+        <span><span class="badge" style="background-color: #0ab39c">&nbsp;</span> Evaluada</span>
+        <span><span class="badge" style="background-color: #f06548">&nbsp;</span> Cancelada</span>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light"><tr><th>Fecha</th><th>Eje mensual</th><th>Institución</th><th>Municipio</th><th>Profesional(es)</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            @for (e of lista(); track e.id) {
+              <tr>
+                <td>{{ e.start | date: 'dd/MM/yyyy' }}</td>
+                <td><span class="badge me-1" [style.background-color]="e.color">&nbsp;</span>{{ e.title }}</td>
+                <td>{{ e.extendedProps.institucion || 'Sin institución registrada' }}</td>
+                <td>{{ e.extendedProps.municipio }}</td>
+                <td>{{ e.extendedProps.profesionales || 'Sin asignar' }}</td>
+                <td><span [class]="badge(e.extendedProps.estado)">{{ etiqueta(e.extendedProps.estado) }}</span></td>
+                <td><button type="button" class="btn btn-outline-primary btn-sm" (click)="seleccionado.set(e)">Ver</button></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="text-center text-muted py-4">No hay actividades programadas en {{ titulo() }}.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<app-modal [abierto]="!!seleccionado()" titulo="Detalle de Actividad" (cerrar)="seleccionado.set(null)">
+  @if (seleccionado(); as e) {
+    <dl class="row mb-0">
+      <dt class="col-sm-4">Fecha</dt><dd class="col-sm-8">{{ (e.start | date: "EEEE, d 'de' MMMM 'de' y") | titlecaseEs }}</dd>
+      <dt class="col-sm-4">Actividad</dt><dd class="col-sm-8">{{ e.extendedProps.descripcionActividad }}</dd>
+      <dt class="col-sm-4">Institución</dt><dd class="col-sm-8">{{ e.extendedProps.institucion || 'Sin institución registrada' }}</dd>
+      <dt class="col-sm-4">Profesional(es)</dt><dd class="col-sm-8">{{ e.extendedProps.profesionales || 'Sin asignar' }}</dd>
+      <dt class="col-sm-4">Municipio</dt><dd class="col-sm-8">{{ e.extendedProps.municipio }}</dd>
+      <dt class="col-sm-4">Estado</dt><dd class="col-sm-8"><span [class]="badge(e.extendedProps.estado)">{{ etiqueta(e.extendedProps.estado) }}</span></dd>
+    </dl>
+  }
+  <div modal-footer class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="seleccionado.set(null)">Cerrar</button>
+    @if (seleccionado(); as e) {
+      <a [routerLink]="['/actividades', e.id]" class="btn btn-primary" (click)="seleccionado.set(null)"><i class="ri-eye-line me-1"></i>Ver Detalle Completo</a>
+    }
+  </div>
+</app-modal>
+
+<app-modal [abierto]="modalPdf()" titulo="Descargar Calendario PDF" (cerrar)="modalPdf.set(false)">
+  <form id="formPdf" (submit)="descargarPdf($event)">
+    <p class="text-muted">Selecciona el mes y año del calendario que deseas descargar.</p>
+    <div class="row g-3">
+      <div class="col-6">
+        <label class="form-label">Mes</label>
+        <select class="form-select" [(ngModel)]="pdfMes" name="pdfMes">
+          @for (m of meses; track m; let i = $index) { <option [ngValue]="i + 1">{{ m }}</option> }
+        </select>
+      </div>
+      <div class="col-6">
+        <label class="form-label">Año</label>
+        <select class="form-select" [(ngModel)]="pdfAnio" name="pdfAnio">
+          @for (a of anios; track a) { <option [ngValue]="a">{{ a }}</option> }
+        </select>
+      </div>
+    </div>
+  </form>
+  <div modal-footer class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="modalPdf.set(false)">Cancelar</button>
+    <button type="submit" form="formPdf" class="btn btn-danger"><i class="ri-file-pdf-line me-1"></i>Ver / Descargar</button>
+  </div>
+</app-modal>
