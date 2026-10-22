@@ -441,18 +441,39 @@ h1, h2, h3, h4, h5, h6 { color: var(--vz-heading); }
 // --- Autenticación (login/registro) ------------------------------------------
 .auth-body { background: var(--vz-body-bg); min-height: 100vh; }
 .login-banner {
-  height: 260px;
-  background: linear-gradient(135deg, #0e1e38 0%, #5c59e8 100%);
+  position: relative;
+  height: 360px;
+  overflow: hidden;
+  background: url('/assets/images/auth-bg.jpg') center center / cover no-repeat;
   color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  // El título va debajo del lema #LaCajaDeTodos de la imagen, por encima de la ola.
+  justify-content: flex-end;
+  padding-bottom: 96px;
 }
-.login-banner-title { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 2.2rem; }
+// Mismo fondo que el login de vigia-ssf / app.comfasucre.com: degradado, partículas y ola.
+.login-banner-overlay { position: absolute; inset: 0; background: linear-gradient(to right, #4f42ec, #0066b2); opacity: 0.9; }
+.login-banner-particles {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.55) 1.5px, transparent 2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.35) 1px, transparent 1.6px);
+  background-size: 160px 140px, 90px 110px;
+  background-position: 20px 30px, 60px 10px;
+  animation: loginBannerTwinkle 6s ease-in-out infinite alternate;
+}
+@keyframes loginBannerTwinkle { from { opacity: 0.55; } to { opacity: 1; } }
+.login-banner-shape { position: absolute; left: 0; right: 0; bottom: -1px; line-height: 0; }
+.login-banner-shape svg { width: 100%; height: 100px; display: block; }
+.login-banner-shape path { fill: var(--vz-body-bg); }
+.login-banner-text { position: relative; text-align: center; }
+.login-banner-title { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 2rem; }
 .login-banner-tagline { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: rgba(255, 255, 255, 0.6); font-weight: 600; }
-.login-card { border-radius: 16px !important; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06) !important; margin-top: -60px; border: 1px solid var(--vz-border) !important; }
-.login-header { h2 { font-weight: 700; font-size: 1.6rem; color: var(--vz-heading); } p { color: var(--vz-muted); font-size: 0.9rem; } }
+.login-card { border-radius: 16px !important; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06) !important; margin-top: -50px; margin-bottom: 0 !important; border: 1px solid var(--vz-border) !important; }
+.login-header { h2 { font-weight: 700; font-size: 1.45rem; color: var(--vz-heading); } p { color: var(--vz-muted); font-size: 0.9rem; } }
 .password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: var(--vz-label); &:hover { color: var(--vz-text-2); } }
 .footer-link { color: $primary; font-weight: 600; text-decoration: none; &:hover { color: #4a47d4; text-decoration: underline; } }
 
