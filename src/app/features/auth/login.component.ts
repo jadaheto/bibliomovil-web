@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiRequestError } from '../../core/api/api.service';
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/auth/auth.service';
 import { AlertService } from '../../core/ui/alert.service';
 import { AlertsComponent } from '../../core/ui/alerts.component';
@@ -47,6 +48,13 @@ import { marcarTodoTocado } from '../../shared/forms/form.utils';
             Iniciar sesión
           </button>
         </form>
+        <div class="d-flex align-items-center my-3 text-muted fs-12">
+          <hr class="flex-grow-1" /><span class="px-2">o</span><hr class="flex-grow-1" />
+        </div>
+        <a [href]="googleUrl" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2">
+          <i class="ri-google-fill"></i> Ingresar con Google
+        </a>
+        <p class="text-center text-muted fs-12 mt-2 mb-0">Solo para cuentas &#64;comfasucre.com.co</p>
         <p class="text-center text-muted mt-4 mb-0 fs-14">
           ¿Primera vez en el portal? <a routerLink="/registro-institucion" class="footer-link">Regístrate aquí</a>
         </p>
@@ -68,9 +76,12 @@ export class LoginComponent {
   readonly cargando = signal(false);
   readonly error = signal<string | null>(null);
   readonly verContrasena = signal(false);
+  readonly googleUrl = `${environment.apiUrl}/auth/google`;
 
   constructor() {
     inject(Title).setTitle('Iniciar Sesión - Biblio Móvil Comfasucre');
+    // Errores del ingreso con Google llegan como ?error=... desde el callback de la API.
+    this.error.set(this.route.snapshot.queryParamMap.get('error'));
   }
 
   enviar(): void {

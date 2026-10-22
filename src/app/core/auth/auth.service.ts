@@ -36,6 +36,13 @@ export class AuthService {
     );
   }
 
+  /** Inicia sesión con un JWT emitido por el servidor (ingreso con Google) y carga la identidad. */
+  loginConToken(token: string): Observable<CurrentUser> {
+    this.write(TOKEN_KEY, token);
+    this.tokenSignal.set(token);
+    return this.refreshCurrent();
+  }
+
   /** Refresca la identidad desde el servidor (p. ej. tras cambiar nombre o carnetización). */
   refreshCurrent(): Observable<CurrentUser> {
     return this.api.get<CurrentUser>('auth/me').pipe(

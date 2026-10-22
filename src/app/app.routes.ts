@@ -13,6 +13,10 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'login' },
       { path: 'login', loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent) },
       {
+        path: 'login/google',
+        loadComponent: () => import('./features/auth/google-callback.component').then((m) => m.GoogleCallbackComponent),
+      },
+      {
         path: 'registro-institucion',
         loadComponent: () => import('./features/auth/registro-institucion.component').then((m) => m.RegistroInstitucionComponent),
       },
